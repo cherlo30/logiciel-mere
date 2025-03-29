@@ -39,7 +39,7 @@ type CustomNodeData = {
 
 function FlowEditorContent() {
   const [operations, setOperations] = useState<Operation[]>([])
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<CustomNodeData>>([])
+  const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [editNode, setEditNode] = useState<Node<CustomNodeData> | null>(null)
