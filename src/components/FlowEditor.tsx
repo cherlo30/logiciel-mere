@@ -1,4 +1,3 @@
-// FlowEditor.tsx
 'use client'
 
 import React, { useCallback, useEffect, useState, useRef } from 'react'
@@ -38,7 +37,7 @@ type CustomNodeData = {
 }
 
 function FlowEditorContent() {
-    const [nodes, setNodes, onNodesChange] = useNodesState<Node<CustomNodeData>[]>([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<CustomNodeData>[]>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [editNode, setEditNode] = useState<Node<CustomNodeData> | null>(null)
@@ -66,34 +65,40 @@ function FlowEditorContent() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        textAlign: 'center',
-        backgroundColor: selectedNodeId === 'plus' ? '#dbeafe' : 'white'
-      },
+        textAlign: 'center' as React.CSSProperties['textAlign'],
+        backgroundColor: 'white'
+      }
     }
     setNodes([initialNode])
   }, [setNodes])
-  
 
-  const createAddButtonNode = (position: { x: number, y: number }) => {
-    return {
-      id: uuidv4(),
-      data: { label: '+', isAddButton: true },
-      position,
-      type: 'default',
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left,
-      style: {
-        width: 40,
-        height: 40,
-        fontSize: 24,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        backgroundColor: '#fff'
-      },
+  useKeyPress(['Delete', 'Backspace'], () => {
+    if (selectedNodeId) {
+      setNodes((nds) => nds.filter(n => n.id !== selectedNodeId))
+      setEdges((eds) => eds.filter(e => e.source !== selectedNodeId && e.target !== selectedNodeId))
+      setSelectedNodeId(null)
+      setEditNode(null)
     }
-  }
+  })
+
+  const createAddButtonNode = (position: { x: number, y: number }): Node<CustomNodeData> => ({
+    id: uuidv4(),
+    data: { label: '+', isAddButton: true },
+    position,
+    type: 'default',
+    sourcePosition: Position.Right,
+    targetPosition: Position.Left,
+    style: {
+      width: 40,
+      height: 40,
+      fontSize: 24,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center' as React.CSSProperties['textAlign'],
+      backgroundColor: '#fff'
+    }
+  })
 
   const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
     event.preventDefault()
@@ -101,16 +106,12 @@ function FlowEditorContent() {
     const newPlusNode = createAddButtonNode(flowPos)
     setNodes((nds) => [...nds, newPlusNode])
     setSelectedNodeId(newPlusNode.id)
-    setMenuPosition(flowPos)
+    setMenuPosition({ x: event.clientX, y: event.clientY })
     setEditNode({
-      id: newPlusNode.id,
-      position: flowPos,
-      data: { label: '+', type: '', duree: 60, isAddButton: true },
-      type: 'default',
-      width: 100,
-      height: 100,
+      ...newPlusNode,
+      data: { ...newPlusNode.data, type: '', duree: 60 }
     })
-  }, [screenToFlowPosition])
+  }, [screenToFlowPosition, setNodes])
 
   const addOperation = (type: string, plusNodeId: string) => {
     const plusNode = nodes.find((n) => n.id === plusNodeId)
@@ -138,13 +139,13 @@ function FlowEditorContent() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        textAlign: 'center',
+        textAlign: 'center' as React.CSSProperties['textAlign'],
         whiteSpace: 'pre-line',
         backgroundColor: 'white'
       }
     }
 
-    const newPlusNode: Node<CustomNodeData> = createAddButtonNode({
+    const newPlusNode = createAddButtonNode({
       x: plusNode.position.x + horizontalSpacing,
       y: plusNode.position.y
     })
@@ -156,7 +157,7 @@ function FlowEditorContent() {
         id: `e${parentEdge.source}-${newOpId}`,
         source: parentEdge.source,
         target: newOpId,
-        markerEnd: { type: MarkerType.ArrowClosed },
+        markerEnd: { type: MarkerType.ArrowClosed }
       })
     }
 
@@ -164,7 +165,7 @@ function FlowEditorContent() {
       id: `e${newOpId}-${newPlusNode.id}`,
       source: newOpId,
       target: newPlusNode.id,
-      markerEnd: { type: MarkerType.ArrowClosed },
+      markerEnd: { type: MarkerType.ArrowClosed }
     })
 
     const filteredEdges = edges.filter(e => e.target !== plusNodeId)
@@ -239,7 +240,7 @@ function FlowEditorContent() {
 
   const startDrag = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
-    if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.closest('input') || target.closest('select')) return
+    if (['INPUT', 'SELECT'].includes(target.tagName) || target.closest('input') || target.closest('select')) return
     if (!menuRef.current) return
     const rect = menuRef.current.getBoundingClientRect()
     offset.current = {
