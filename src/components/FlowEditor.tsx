@@ -38,13 +38,11 @@ type CustomNodeData = {
 }
 
 function FlowEditorContent() {
-  const [operations, setOperations] = useState<Operation[]>([])
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node<CustomNodeData>[]>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [editNode, setEditNode] = useState<Node<CustomNodeData> | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ x: number, y: number } | null>(null)
-  const [contextTargetId, setContextTargetId] = useState<string | null>(null)
   const { screenToFlowPosition } = useReactFlow()
 
   const typesDisponibles = ['Tournage numérique', 'Fraisage', 'Tournage conventionnel', 'Réception matière']
@@ -52,7 +50,6 @@ function FlowEditorContent() {
   const menuRef = useRef<HTMLDivElement>(null)
   const offset = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const isDraggingRef = useRef(false)
-  const dragStartRef = useRef<{ x: number, y: number }>({ x: 0, y: 0 })
 
   useEffect(() => {
     const initialNode: Node<CustomNodeData> = {
@@ -75,15 +72,7 @@ function FlowEditorContent() {
     }
     setNodes([initialNode])
   }, [setNodes])
-
-  useKeyPress(['Delete', 'Backspace'], () => {
-    if (selectedNodeId) {
-      setNodes((nds) => nds.filter(n => n.id !== selectedNodeId))
-      setEdges((eds) => eds.filter(e => e.source !== selectedNodeId && e.target !== selectedNodeId))
-      setSelectedNodeId(null)
-      setEditNode(null)
-    }
-  })
+  
 
   const createAddButtonNode = (position: { x: number, y: number }) => {
     return {
@@ -112,8 +101,7 @@ function FlowEditorContent() {
     const newPlusNode = createAddButtonNode(flowPos)
     setNodes((nds) => [...nds, newPlusNode])
     setSelectedNodeId(newPlusNode.id)
-    setContextTargetId(newPlusNode.id)
-    setMenuPosition({ x: event.clientX, y: event.clientY })
+    setMenuPosition(flowPos)
     setEditNode({
       id: newPlusNode.id,
       position: flowPos,
@@ -122,14 +110,13 @@ function FlowEditorContent() {
       width: 100,
       height: 100,
     })
-  }, [screenToFlowPosition, setNodes])
+  }, [screenToFlowPosition])
 
   const addOperation = (type: string, plusNodeId: string) => {
     const plusNode = nodes.find((n) => n.id === plusNodeId)
     if (!plusNode) return
 
     const newOpId = uuidv4()
-    const newPlusId = uuidv4()
     const nodeHeight = 100
     const nodeWidth = 100
     const horizontalSpacing = 200
@@ -153,7 +140,7 @@ function FlowEditorContent() {
         justifyContent: 'center',
         textAlign: 'center',
         whiteSpace: 'pre-line',
-        backgroundColor: selectedNodeId === newOpId ? '#dbeafe' : 'white'
+        backgroundColor: 'white'
       }
     }
 
@@ -202,7 +189,6 @@ function FlowEditorContent() {
         ...node,
         data: { ...node.data, type: '', duree: 60 }
       })
-      setContextTargetId(node.id)
     }
   }
 
